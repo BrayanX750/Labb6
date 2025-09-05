@@ -8,6 +8,12 @@ import javax.swing.text.DefaultStyledDocument;
 import javax.swing.text.StyledDocument;
 import java.io.*;
 
+/**
+ *
+ * @author Usuario
+ */
+
+
 public class GestorArchivos {
     public static boolean guardar(StyledDocument doc, File file) {
         try (ObjectOutputStream o = new ObjectOutputStream(new FileOutputStream(file))) {

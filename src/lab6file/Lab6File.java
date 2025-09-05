@@ -4,10 +4,6 @@
  */
 package lab6file;
 
-/**
- *
- * @author Usuario
- */
 import javax.swing.*;
 import javax.swing.filechooser.FileNameExtensionFilter;
 import javax.swing.text.*;
@@ -19,6 +15,11 @@ import java.awt.event.*;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.FileInputStream;
+
+/**
+ *
+ * @author Usuario
+ */
 
 public class Lab6File extends JFrame {
     private JTextPane areaTexto;
