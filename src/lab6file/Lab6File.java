@@ -13,9 +13,12 @@ import javax.swing.filechooser.FileNameExtensionFilter;
 import javax.swing.text.*;
 import javax.swing.text.StyleConstants;
 import javax.swing.text.StyledEditorKit;
+import javax.swing.text.rtf.RTFEditorKit;
 import java.awt.*;
 import java.awt.event.*;
 import java.io.File;
+import java.io.FileOutputStream;
+import java.io.FileInputStream;
 
 public class Lab6File extends JFrame {
     private JTextPane areaTexto;
@@ -34,8 +37,10 @@ public class Lab6File extends JFrame {
         JScrollPane scroll = new JScrollPane(areaTexto);
 
         JPanel barra1 = new JPanel(new FlowLayout(FlowLayout.LEFT));
-        JButton botonAbrir = new JButton("Abrir");
-        JButton botonGuardar = new JButton("Guardar");
+        JButton botonAbrir = new JButton("Abrir .docx");
+        JButton botonGuardar = new JButton("Guardar .docx");
+        JButton botonAbrirRTF = new JButton("Abrir RTF");
+        JButton botonGuardarRTF = new JButton("Guardar RTF");
         JButton botonNegrita = new JButton("B");
         botonNegrita.setFont(new Font("Arial", Font.BOLD, 14));
         JButton botonCursiva = new JButton("I");
@@ -45,15 +50,22 @@ public class Lab6File extends JFrame {
         comboFuentes = new JComboBox<>(GraphicsEnvironment.getLocalGraphicsEnvironment().getAvailableFontFamilyNames());
         comboTamanos = new JComboBox<>(new Integer[]{12, 14, 16, 18, 24, 36, 48, 64, 72, 92, 120});
 
+        // panel vertical con fuente arriba y tamaño abajo
+        JPanel panelFuenteTamano = new JPanel();
+        panelFuenteTamano.setLayout(new BoxLayout(panelFuenteTamano, BoxLayout.Y_AXIS));
+        panelFuenteTamano.add(new JLabel("Fuente"));
+        panelFuenteTamano.add(comboFuentes);
+        panelFuenteTamano.add(new JLabel("Tamaño"));
+        panelFuenteTamano.add(comboTamanos);
+
         barra1.add(botonAbrir);
         barra1.add(botonGuardar);
+        barra1.add(botonAbrirRTF);
+        barra1.add(botonGuardarRTF);
         barra1.add(botonNegrita);
         barra1.add(botonCursiva);
         barra1.add(botonSubrayado);
-        barra1.add(new JLabel("Fuente"));
-        barra1.add(comboFuentes);
-        barra1.add(new JLabel("Tamaño"));
-        barra1.add(comboTamanos);
+        barra1.add(panelFuenteTamano);
 
         JPanel barra2 = new JPanel(new FlowLayout(FlowLayout.LEFT));
         JPanel paleta = new JPanel(new GridLayout(2, 8, 4, 4));
@@ -79,12 +91,8 @@ public class Lab6File extends JFrame {
         arriba.add(barra1);
         arriba.add(barra2);
 
-        JPanel abajo = new JPanel(new FlowLayout(FlowLayout.RIGHT));
-        
-
         add(arriba, BorderLayout.NORTH);
         add(scroll, BorderLayout.CENTER);
-        add(abajo, BorderLayout.SOUTH);
 
         botonNegrita.addActionListener(e -> toggleEstilo("negrita"));
         botonCursiva.addActionListener(e -> toggleEstilo("cursiva"));
@@ -93,12 +101,13 @@ public class Lab6File extends JFrame {
         comboTamanos.addActionListener(e -> aplicarTamano());
         botonAbrir.addActionListener(e -> abrirArchivo());
         botonGuardar.addActionListener(e -> guardarArchivo());
-        
+        botonGuardarRTF.addActionListener(e -> guardarComoRTF());
+        botonAbrirRTF.addActionListener(e -> abrirRTF());
+
         selector = new JFileChooser();
         selector.setFileFilter(new FileNameExtensionFilter("Documentos .docx", "docx"));
 
         addWindowListener(new WindowAdapter() {
-            @Override
             public void windowClosing(WindowEvent e) {
                 if (archivoActual != null) GestorArchivos.guardar(areaTexto.getStyledDocument(), archivoActual);
                 dispose();
@@ -119,16 +128,13 @@ public class Lab6File extends JFrame {
         int inicio = areaTexto.getSelectionStart();
         int fin = areaTexto.getSelectionEnd();
         MutableAttributeSet attrs = input();
-
         boolean b = StyleConstants.isBold(attrs);
         boolean i = StyleConstants.isItalic(attrs);
         boolean u = StyleConstants.isUnderline(attrs);
-
         SimpleAttributeSet s = new SimpleAttributeSet();
         if (cual.equals("negrita")) StyleConstants.setBold(s, !b);
         if (cual.equals("cursiva")) StyleConstants.setItalic(s, !i);
         if (cual.equals("subrayado")) StyleConstants.setUnderline(s, !u);
-
         if (inicio != fin) {
             areaTexto.getStyledDocument().setCharacterAttributes(inicio, fin - inicio, s, false);
         }
@@ -185,6 +191,41 @@ public class Lab6File extends JFrame {
         if (archivoActual != null) {
             if (GestorArchivos.guardar(areaTexto.getStyledDocument(), archivoActual)) {
                 JOptionPane.showMessageDialog(this, "Archivo guardado");
+            }
+        }
+    }
+
+    private void guardarComoRTF() {
+        JFileChooser ch = new JFileChooser();
+        ch.setFileFilter(new FileNameExtensionFilter("Rich Text Format (.rtf)", "rtf"));
+        if (ch.showSaveDialog(this) == JFileChooser.APPROVE_OPTION) {
+            File f = ch.getSelectedFile();
+            if (!f.getName().toLowerCase().endsWith(".rtf")) {
+                f = new File(f.getParentFile(), f.getName() + ".rtf");
+            }
+            try (FileOutputStream fos = new FileOutputStream(f)) {
+                RTFEditorKit rtf = new RTFEditorKit();
+                rtf.write(fos, areaTexto.getStyledDocument(), 0, areaTexto.getDocument().getLength());
+                JOptionPane.showMessageDialog(this, "RTF guardado");
+            } catch (Exception ex) {
+                JOptionPane.showMessageDialog(this, "No se pudo guardar RTF");
+            }
+        }
+    }
+
+    private void abrirRTF() {
+        JFileChooser ch = new JFileChooser();
+        ch.setFileFilter(new FileNameExtensionFilter("Rich Text Format (.rtf)", "rtf"));
+        if (ch.showOpenDialog(this) == JFileChooser.APPROVE_OPTION) {
+            File f = ch.getSelectedFile();
+            try (FileInputStream fis = new FileInputStream(f)) {
+                RTFEditorKit rtf = new RTFEditorKit();
+                StyledDocument doc = new DefaultStyledDocument();
+                rtf.read(fis, doc, 0);
+                areaTexto.setStyledDocument(doc);
+                archivoActual = null;
+            } catch (Exception ex) {
+                JOptionPane.showMessageDialog(this, "No se pudo abrir RTF");
             }
         }
     }
