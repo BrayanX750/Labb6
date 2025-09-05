@@ -50,7 +50,6 @@ public class Lab6File extends JFrame {
         comboFuentes = new JComboBox<>(GraphicsEnvironment.getLocalGraphicsEnvironment().getAvailableFontFamilyNames());
         comboTamanos = new JComboBox<>(new Integer[]{12, 14, 16, 18, 24, 36, 48, 64, 72, 92, 120});
 
-        // panel vertical con fuente arriba y tamaño abajo
         JPanel panelFuenteTamano = new JPanel();
         panelFuenteTamano.setLayout(new BoxLayout(panelFuenteTamano, BoxLayout.Y_AXIS));
         panelFuenteTamano.add(new JLabel("Fuente"));
@@ -83,8 +82,15 @@ public class Lab6File extends JFrame {
             b.addActionListener(e -> aplicarColor(c));
             paleta.add(b);
         }
+        JButton botonRueda = new JButton("Rueda de color");
+        botonRueda.addActionListener(e -> {
+            Color elegido = JColorChooser.showDialog(this, "Elige un color", Color.black);
+            if (elegido != null) aplicarColor(elegido);
+        });
+
         barra2.add(new JLabel("Color"));
         barra2.add(paleta);
+        barra2.add(botonRueda);
 
         JPanel arriba = new JPanel();
         arriba.setLayout(new BoxLayout(arriba, BoxLayout.Y_AXIS));
